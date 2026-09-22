@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What is the difference between Array#map and Array#each?",
+    "expected_topics": ["Array#map", "Array#each"]
+  },
+  {
+    "question": "How does Hash#fetch behave when the key doesn't exist?",
+    "expected_topics": ["Hash#fetch"]
+  },
+  {
+    "question": "How do I read a file line-by-line in Ruby?",
+    "expected_topics": ["File", "IO"]
+  },
+  {
+    "question": "What does Enumerable#select return?",
+    "expected_topics": ["Enumerable#select"]
+  },
+  {
+    "question": "How does Ruby handle blocks passed to methods?",
+    "expected_topics": ["blocks", "methods"]
+  },
+  {
+    "question": "What is the difference between require and require_relative?",
+    "expected_topics": ["require", "require_relative"]
+  }
+]
