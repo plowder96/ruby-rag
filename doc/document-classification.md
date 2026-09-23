@@ -1,111 +1,60 @@
-# Ruby Source Q/A RAG Classification Approach
+# Ruby Source Document Classification
 
 ## 1. Purpose
 
-This document defines the current approach for classifying and tagging information extracted from the Ruby source code and RDoc comments for use in a basic question-answering (Q/A) RAG system centered on the Ruby programming language.
+This document defines the approach for classifying and tagging information extracted from Ruby source code and RDoc comments for use in the Ruby question-answering RAG system.
 
-The goal is **retrieval usefulness**, not exhaustive documentation of every possible semantic distinction. Classification should help the retrieval system distinguish *what role a piece of information plays*, while topics and other metadata capture *what Ruby concept the information concerns*.
+The goal is **retrieval usefulness**, not exhaustive documentation of every possible semantic distinction.
 
----
-
-## 2. Overall Conceptual RAG Pipeline
-
-The intended pipeline is:
-
-```text
-                 Ruby source / RDoc
-                        │
-                        ▼
-              ┌───────────────────┐
-              │ Extract / chunk    │
-              │ source information │
-              └─────────┬─────────┘
-                        │
-                        ▼
-              ┌───────────────────┐
-              │ Classify           │
-              │ information role   │
-              └─────────┬─────────┘
-                        │
-                        ▼
-              ┌───────────────────┐
-              │ Extract metadata   │
-              │ topics / methods / │
-              │ classes / concepts │
-              └─────────┬─────────┘
-                        │
-                        ▼
-              ┌───────────────────┐
-              │ Store chunk +      │
-              │ metadata + vector │
-              │ / keyword index   │
-              └─────────┬─────────┘
-                        │
-                 User question
-                        │
-                        ▼
-              ┌───────────────────┐
-              │ Retrieve relevant  │
-              │ chunks             │
-              │ (semantic +        │
-              │ metadata/keyword)  │
-              └─────────┬─────────┘
-                        │
-                        ▼
-              ┌───────────────────┐
-              │ Generate answer    │
-              │ grounded in Ruby   │
-              │ source material    │
-              └───────────────────┘
-```
-
-The important design principle is that **classification and topic tagging serve different purposes**.
+Classification should help the retrieval system distinguish **what role a piece of information plays**, while topics and other metadata capture **what Ruby concept the information concerns**.
 
 ---
 
-## 3. Classification vs. Topic
+## 2. Classification vs. Topic
+
+Classification and topic tagging serve different purposes.
 
 ### Classification
 
-**Classification answers:**
+Classification answers:
 
 > What role does this piece of information play?
 
 Classification should use a relatively small, stable taxonomy that generalizes across the Ruby codebase.
 
-Examples:
+Examples include:
 
-- API documentation
-- Implementation details
-- Algorithm descriptions
-- Memory / GC behavior
-- Optimization rationale
-- Runtime safety constraints
+* API documentation
+* Implementation details
+* Algorithm descriptions
+* Memory / GC behavior
+* Optimization rationale
+* Runtime safety constraints
 
 Classification should not attempt to describe every Ruby feature mentioned in a chunk.
 
 ### Topic
 
-**Topic answers:**
+Topic answers:
 
 > What Ruby concept is this information about?
 
 Topics should be more specific and can grow as the corpus grows.
 
-Examples:
+Examples include:
 
-- array indexing
-- ranges
-- arithmetic sequences
-- permutations
-- shared arrays
-- copy-on-write
-- GC compaction
-- write barriers
-- defensive copying
-- method dispatch
-- blocks
-- enumerators
+* array indexing
+* ranges
+* arithmetic sequences
+* permutations
+* shared arrays
+* copy-on-write
+* GC compaction
+* write barriers
+* defensive copying
+* method dispatch
+* blocks
+* enumerators
 
 A single chunk can have one classification and multiple topics.
 
@@ -126,22 +75,33 @@ This is preferable to creating a separate primary classification such as `INDEXI
 
 ---
 
-## 4. Current Classification Taxonomy
+## 3. Current Classification Taxonomy
 
-The recommended initial taxonomy contains six primary classifications.
+The recommended initial taxonomy contains six primary classifications:
 
-### 4.1 `API_DOCUMENTATION`
+```text
+API_DOCUMENTATION
+IMPLEMENTATION
+ALGORITHM
+MEMORY_GC
+OPTIMIZATION
+RUNTIME_SAFETY
+```
+
+These classifications are intended to remain broad enough to generalize across additional Ruby source files.
+
+### 3.1 `API_DOCUMENTATION`
 
 Information describing Ruby's public-facing API or user-visible behavior.
 
 Use for:
 
-- classes and methods
-- arguments
-- return values
-- documented behavior
-- enumerator behavior
-- user-facing semantics
+* classes and methods
+* arguments
+* return values
+* documented behavior
+* enumerator behavior
+* user-facing semantics
 
 Example:
 
@@ -157,37 +117,33 @@ Example:
 }
 ```
 
----
-
-### 4.2 `IMPLEMENTATION`
+### 3.2 `IMPLEMENTATION`
 
 General information about how Ruby/MRI implements a feature when the information does not fit a more specific implementation category.
 
 Use for:
 
-- internal data structures
-- C-level implementation mechanics
-- internal helper behavior
-- object representation
-- implementation-specific details
+* internal data structures
+* C-level implementation mechanics
+* internal helper behavior
+* object representation
+* implementation-specific details
 
-This is intentionally broad, but should not become a catch-all when a more specific classification is appropriate.
+This category is intentionally broad, but should not become a catch-all when a more specific classification is appropriate.
 
----
-
-### 4.3 `ALGORITHM`
+### 3.3 `ALGORITHM`
 
 Information explaining an algorithm or computational procedure used by Ruby.
 
 Use for:
 
-- permutation generation
-- combinations
-- Cartesian products
-- sorting algorithms
-- numerical algorithms
-- iteration algorithms
-- other explicit computational procedures
+* permutation generation
+* combinations
+* Cartesian products
+* sorting algorithms
+* numerical algorithms
+* iteration algorithms
+* other explicit computational procedures
 
 Example:
 
@@ -202,24 +158,22 @@ Example:
 }
 ```
 
----
-
-### 4.4 `MEMORY_GC`
+### 3.4 `MEMORY_GC`
 
 Information concerning memory representation, ownership, allocation, garbage collection, object sharing, or related runtime memory behavior.
 
 Use for:
 
-- embedded vs. heap objects
-- shared arrays
-- copy-on-write
-- GC marking
-- GC compaction
-- write barriers
-- pointer ownership
-- object lifetime
-- allocation behavior
-- defensive copies when the important aspect is memory/object ownership
+* embedded vs. heap objects
+* shared arrays
+* copy-on-write
+* GC marking
+* GC compaction
+* write barriers
+* pointer ownership
+* object lifetime
+* allocation behavior
+* defensive copies when the important aspect is memory or object ownership
 
 Example:
 
@@ -235,21 +189,19 @@ Example:
 }
 ```
 
----
-
-### 4.5 `OPTIMIZATION`
+### 3.5 `OPTIMIZATION`
 
 Information explaining performance-oriented implementation choices.
 
 Use for:
 
-- fast paths
-- special cases
-- avoiding unnecessary work
-- cache-related considerations
-- optimized comparisons
-- allocation avoidance
-- performance-driven implementation choices
+* fast paths
+* special cases
+* avoiding unnecessary work
+* cache-related considerations
+* optimized comparisons
+* allocation avoidance
+* performance-driven implementation choices
 
 Example:
 
@@ -264,21 +216,19 @@ Example:
 }
 ```
 
----
-
-### 4.6 `RUNTIME_SAFETY`
+### 3.6 `RUNTIME_SAFETY`
 
 Information describing constraints required to keep execution correct in the presence of Ruby's runtime behavior.
 
 Use for:
 
-- reentrancy
-- mutation during callbacks
-- frozen objects
-- pointer invalidation
-- Ruby method calls that can trigger GC
-- object movement/evacuation
-- subtle interactions between C code and Ruby code
+* reentrancy
+* mutation during callbacks
+* frozen objects
+* pointer invalidation
+* Ruby method calls that can trigger GC
+* object movement or evacuation
+* subtle interactions between C code and Ruby code
 
 Example:
 
@@ -287,8 +237,8 @@ Example:
   "classification": "RUNTIME_SAFETY",
   "topics": [
     "reentrancy",
+    "Ruby callbacks",
     "array mutation",
-    "GC compaction",
     "pointer invalidation"
   ]
 }
@@ -296,28 +246,28 @@ Example:
 
 ---
 
-## 5. Why `INDEXING_RANGES` Is Not a Primary Classification
+## 4. Why `INDEXING_RANGES` Is Not a Primary Classification
 
-`INDEXING_RANGES` was considered during analysis of `array.c`, because many `OTHER` comments concern:
+`INDEXING_RANGES` was considered during analysis of `array.c` because many `OTHER` comments concern:
 
-- negative indexes
-- ranges
-- slicing
-- `ArithmeticSequence`
-- bounds checking
+* negative indexes
+* ranges
+* slicing
+* `ArithmeticSequence`
+* bounds checking
 
 However, it should **not** be a primary classification.
 
-The reason is that indexing and ranges are **topics/domains**, rather than a general information role.
+Indexing and ranges are **topics or domains**, rather than a general information role.
 
-Similar concepts appear throughout Ruby:
+Similar concepts appear throughout Ruby, including:
 
-- `Array` — positional indexes and slicing
-- `String` — character/byte offsets and slicing
-- `Range` — range endpoints and iteration
-- `Enumerator` — sequence/iteration behavior
-- `Regexp` — match positions and offsets
-- `Hash` — key lookup rather than positional indexing
+* `Array` — positional indexes and slicing
+* `String` — character/byte offsets and slicing
+* `Range` — range endpoints and iteration
+* `Enumerator` — sequence/iteration behavior
+* `Regexp` — match positions and offsets
+* `Hash` — key lookup rather than positional indexing
 
 Making `INDEXING_RANGES` a classification would therefore mix together information that may have very different roles.
 
@@ -349,7 +299,7 @@ or, for user-facing documentation:
 
 ---
 
-## 6. Additional Metadata / Tags
+## 5. Additional Metadata / Tags
 
 Classification should remain relatively small. More detailed information should be represented through additional metadata.
 
@@ -450,7 +400,7 @@ Not every field needs to exist for every chunk.
 
 ---
 
-## 7. Classification Principles
+## 6. Classification Principles
 
 ### Keep the primary taxonomy small
 
@@ -485,7 +435,7 @@ GC_COMPACTION
 WRITE_BARRIER
 ```
 
-The more specific concepts belong in `topics`.
+More specific concepts belong in `topics`.
 
 ### Avoid a generic `MISCELLANEOUS` category
 
@@ -513,7 +463,7 @@ The taxonomy should describe the **role of the information**, while topics descr
 
 ---
 
-## 8. Recommended Initial Schema
+## 7. Recommended Initial Schema
 
 A simple initial representation could be:
 
@@ -540,7 +490,7 @@ The embedding/vector should primarily represent `content`, while metadata can be
 
 ---
 
-## 9. Design Objective
+## 8. Design Objective
 
 The classification system should ultimately help answer questions such as:
 
